@@ -1,6 +1,8 @@
 # Toolchain pinned by SHADEWARD 4.0 TDD section 8.
 # TDD pins rojo 7.7.1 and luau-lsp 1.70.1, which have no public releases yet;
-# CI uses the latest public releases (rojo 7.7.0, luau-lsp 1.70.0). pesde 0.7.4 has no release; 0.7.3 is latest.
+# CI uses the latest public releases (rojo 7.7.0, luau-lsp 1.70.0).
+# pesde is not listed: its release tags carry build metadata (e.g. v0.7.3+registry...) that rokit
+# cannot match, and CI does not use it yet. Re-add with the exact tag once a package is needed.
 # [VERIFY] stylua / selene / lune / pesde versions are not pinned by the TDD; check latest before first install.
 
 [tools]
@@ -9,4 +11,3 @@ luau-lsp = "JohnnyMorganz/luau-lsp@1.70.0"
 stylua = "JohnnyMorganz/StyLua@2.1.0"
 selene = "Kampfkarren/selene@0.29.0"
 lune = "lune-org/lune@0.10.1"
-pesde = "pesde-pkg/pesde@0.7.3"
