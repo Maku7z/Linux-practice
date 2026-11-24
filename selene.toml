@@ -1,0 +1,5 @@
+std = "roblox"
+
+[lints]
+# Deprecated APIs (Lighting.Technology, FilterDescendantsInstances, ...) must fail the gate.
+deprecated = "deny"

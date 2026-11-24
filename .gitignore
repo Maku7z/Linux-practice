@@ -1,0 +1,24 @@
+# Build outputs
+build.rbxl
+sourcemap.json
+globalTypes.d.luau
+roblox.yml
+
+# Studio place backups (kept outside git; back up manually before each phase)
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local Claude Code overrides
+.claude/settings.local.json

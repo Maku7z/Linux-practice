@@ -1,0 +1,7 @@
+# Phase 1: Single-Place, Streaming & Lighting (Opus 5.5). 4 Luau files + NOTES.md.
+# Replace this list by hand before each phase (the guard blocks agents from editing it).
+src/shared/ArenaLayoutConfig.luau
+src/shared/LightingPresets.luau
+src/server/WorldBootstrap.server.luau
+src/client/LightingAndBeamController.client.luau
+NOTES.md

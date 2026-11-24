@@ -1,0 +1,53 @@
+# SHADEWARD 4.0 PR gate (TDD section 8):
+# stylua -> selene -> rojo sourcemap -> luau-lsp analyze -> lune unit tests -> rojo build.
+# Staging/Prod publish (Open Cloud) is NOT wired yet: it needs a universe/place id and an API key secret.
+name: PR Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # [VERIFY] action name/version; any action that runs `rokit install` from rokit.toml works.
+      - uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: StyLua
+        run: stylua --check src
+
+      - name: Selene
+        run: |
+          selene generate-roblox-std
+          selene src
+
+      - name: Rojo sourcemap
+        run: rojo sourcemap default.project.json --output sourcemap.json
+
+      - name: luau-lsp analyze
+        run: |
+          # [VERIFY] definitions file path in the luau-lsp repo for the pinned version.
+          curl -fsSL -o globalTypes.d.luau \
+            https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau
+          luau-lsp analyze \
+            --definitions=globalTypes.d.luau \
+            --base-luaurc=.luaurc \
+            --sourcemap=sourcemap.json \
+            src
+
+      - name: Lune unit tests
+        run: |
+          if [ -d tests ] && ls tests/*.luau >/dev/null 2>&1; then
+            for t in tests/*.luau; do lune run "$t"; done
+          else
+            echo "No lune tests yet."
+          fi
+
+      - name: Rojo build
+        run: rojo build default.project.json --output build.rbxl

@@ -1,0 +1,37 @@
+# AGENTS.md — SHADEWARD 4.0 (Single-Place 24p Competitive PvPvE, Late 2026)
+
+## 1. Architecture & Target Constraints
+- **Game:** SHADEWARD 4.0 — Fortnite-stylized Mild competitive 6-min PvPvE extraction with 6 Pet Classes and 0% Pay-to-Win.
+- **Topology:** Single-Place 24-player max (20 fallback if Server Sim FPS < 59): AmberHearth Hub (0,0,0) (8p) + Arena_A (+2500,0,0) (8p Duos 4x2) + Arena_B (-2500,0,0) (8p Duos 4x2). Launch mode: Duos 4x2 ONLY (Solo/Trios weekend/post-1k CCU).
+- **Pre-Streaming:** Before moving players 2500 studs under StreamingEnabled, call server `Player:RequestStreamAroundAsync(dest)` + temporary `Player:AddReplicationFocus(anchor)` during CLASS_PICK, then immediately `RemoveReplicationFocus` on arrival.
+- **First Session Lock:** New players (MatchesPlayed < 2) enter 2 honest Qualifier Matches vs adaptive AI Shadow Rivals + "1 match to unlock Otter" quest (13-14 min Session 1 for Creator Rewards & D1 retention).
+- **Performance Floor:** 60 FPS (<= 16.67 ms) & <= 650 MB RAM on 2 GB Android; visible scene < 500k tris; 8p snapshot 231 B / ~251 B framed (25.1% of 1000 B UnreliableRemoteEvent cap -> 6.40 KB/s @ 20 Hz).
+- **Rating:** Content Maturity Mild (Kids 5-8 & Select 9-15). Fantastical world, Animated, Unrealistic smoke-poof/comic knockback, Scary Elements only, ZERO Horrifying Elements (no jumpscares, blood, wounds, disfigured faces, or "Blood Eclipse" naming — use "Golden Eclipse").
+
+## 2. Toolchain & One-Writer-Per-Script Discipline
+- **Luau `--!strict`:** `task.wait`/`task.spawn`/`task.defer`, `PreSimulation`/`PostSimulation`/`PreRender`.
+- **Offline Gate:** `rojo build -o build.rbxl && stylua --check src && selene src && luau-lsp analyze --sourcemap=sourcemap.json src` + lune unit tests.
+- **ONE-WRITER RULE:** Edit `.luau` files on disk ONLY (synced via Rojo). Never call Studio MCP `multi_edit` on disk-managed scripts. Use Studio MCP for inspection, Workspace/Lighting edits, playtests, `get_console_output`, `screen_capture`, and profiling. Confirm `.rbxl` backup / git commit before mutations.
+
+## 3. Late-2026 Engine APIs & Hard Bans
+- **Server Authority (Full Release, July 2026):** `Workspace.AuthorityMode = Enum.AuthorityMode.Server` (manual Studio toggle). Keep ONLY `SharedMovementSim.luau` in `BindToSimulation()` using `time()` and `InputAction:GetState()` (never `.Pressed`/`.Changed`). Use `Player:GetCameraState()` (never deprecated `CameraAction`). Cap Animator at 8 active tracks. Never swap Tools mid-chase (client Weld misprediction bug). Run `:Destroy()`/Parent changes in `PostSimulation`, VFX/Audio in `RenderStepped`. Attribute limits: first 64, name/string <= 50 chars.
+- **Spatial Queries (April 2026):** ALWAYS use `RaycastParams.ExcludeInstances` and `IncludeInstances` (NEVER superseded `FilterDescendantsInstances`/`FilterType`/`Blacklist`/`Whitelist`).
+- **Parallel Luau (16-Actor Pool):** Flat Actor pool (no nested Actors); `require()` in serial ONLY; `Workspace:Raycast()` + batched SharedTable in parallel; ALL Instance writes and `PathfindingService:CreatePath()` / `Path:ComputeAsync()` strictly serial (max 2 ComputeAsync/frame quota, `Costs = { SafeHubThreshold = math.huge }`).
+- **Unified Lighting & HighlightPool:** `LightingStyle = Realistic`, `PrioritizeLightingQuality = Disabled` (never `Lighting.Technology`). Tileable MaterialVariant for floors/walls, SurfaceAppearance (TintMask + EmissiveMaskContent) for pets/props, zero UnionOperation walls. Engine Highlight cap is 255, but enforce client HighlightPool max 8 Mobile / 16 PC and `:Destroy()` on expiry.
+
+## 4. Core 4.0 Gameplay, 2 Master Rigs, & 10 Anti-Abuse Invariants
+- **Fixed Symmetric Arena:** 1 handcrafted symmetric arena (randomize ONLY nests, Wild Spark Orbs, patrol seeds) + client golden guiding Beam to team Plot when carrying an egg.
+- **Decoupled Combat:** Stamina (14 walk / 18 sprint / 100 pool / 2.0 s exhausted penalty at 0) is for sprint ONLY. Light Shove costs 0 Stamina on fixed 5.0 s CD (+6.0 st lunge, +7.5 Lynx, 3s DR, 150 ms server rewind clamp, mobile touch Auto-Aim +/-18 deg validated in universal dot >= 0.5 cone). Anti-ping-pong: Victim 1.2 s tumble + 5.0 s Dazed; Thief 2.0 s EscapeBurst (19.5 st/s) + 3.0 s GripGuard (86.8 st advance, 6.13 s re-intercept).
+- **Zero-Menu 2 Auto-Charging Gadgets:** Pre-select 1 Light (80 Sparks, 15 s min CD) + 1 Heavy (150 Sparks, 25 s min CD) before match (0 start, +2/s, 15% egg pts, +30 intercept, +40 Wild Orbs, 1-tap ProximityPrompt pedestals; Raccoon -15% -> 68/128).
+- **Scoring & Phase 3 Vault Raid:** 20% unstealable Initiative + 80% Extract (100/160/260/420/700/1250). Finale shields auto-activate 5:05: Top-1 drops 5:35 (25 s window), standard 5:50, Owl +10 s. Phase 3 raid instantly transfers 30% of rival's Open Podium pool + +150 bonus (Quiet Safe & 20% Initiative untouched).
+- **2 Master Rigs & 6 Classes:** Quadruped_Rig (Fox, Otter, Lynx, Raccoon) + Winged_Rig (Moth, Owl) with centralized root Bones, immutable Class Role Icon, Release-738 runtime FaceControls (ChinRaiser == ChinRaiserUpperLip, NO AU101). Owl RecallToPlot (1.2 s, 1x/match on alarm) MUST fail server-side if `carrierEggId ~= nil`.
+- **10 Anti-Abuse Locks:** Anti-Snitch, Anti-Ping-Pong, AmbushPulse (> 6 s in 45-75 st ring), Relentless (18.8 st/s @ 12 s LOS), Intercept CD (25 s + 1/eggId), 3.5 s CC immunity, max 2 traps/type, no traps in Plot, LastGuardian + CombatLog egg drop, atomic synchronous ownership swaps.
+
+## 5. Audio API v2, IAS, UI Styling, ProfileStore, & Monetization 4.0
+- **Audio API v2 & Deaf Mode:** 4 AudioPlayer buses -> parented Wire -> AudioFader -> AudioCompressor ("Sidechain" ducking) -> AudioEqualizer (parallel occlusion) -> AudioFDNReverb -> AudioEmitter (`SetDistanceAttenuation`). Server AcousticBus enforces strict Deaf Mode radii (28/42/65/90 st; client max 4 directional arcs, zero stud distance).
+- **IAS & UI Styling:** ModalUIContext/ArenaPlayContext/HubSocialContext (`Sink = true`, Keyboard/Gamepad/Touch UIButton), PreferredBinding, GetImageForKeyCode, GetStringForKeyCode, SelectionGroup, StyleSheet/StyleQuery, `ScreenGui.ScreenInsets`.
+- **ProfileStore & Monetization 4.0:** ProfileStore (300 s autosave, StartSessionAsync, AddUserId, Reconcile, MessageHandler, `.Mock` in Studio, BindToClose <= 30 s, no manual compression). ONE `BindReceiptHandler` per `Enum.ReceiptType` (Processed ONLY after persisting PurchaseId/TransferRequestId). Dynamic prices via `GetProductInfoAsync(id, Enum.InfoType.GamePass)`/`GetDeveloperProductsAsync()`. Day-1 Gifting (`GetUsersPriceLevelsAsync` fresh on join), Month-2 Trading (`IsPaidItemTradingAllowed`), GoldenEclipse (99 R$), Chromatic Glows vs Rank-only Royal Purple Neon, Free Post-Match Egg Cracking (0 Paid Random Items), Private Servers + PromptRobuxTransferAsync, UGC 70%, AdService (`GetAdAvailabilityNowAsync` ONLY on Shop open), 8 Friday micro-drops via ConfigService, all 7 PolicyService flags cached on join.
+- **Blender & ElevenLabs:** Blender 4.5/5.x: `if bpy.app.version < (5,0,0): mat.use_nodes = True`, exact BSDF string names, 4-tuple RGBA, Limit Total = 4, Simplify = 0.0, 17+ FACS poses (Frame 0 neutral), < 4k tris UGC cages. ElevenLabs: v3 transient SFX, v2 (`loop: true`) ambience, output strictly to `assets/audio/`.
+
+## 6. Hard 29-File Luau Budget
+- Create/edit ONLY files listed in `.claude/allowed_files.txt` for the active phase. Zero empty pcall, zero scratch/doc sprawl, zero unrequested abstractions. Strip dynamic IDs/coords from error logs.
