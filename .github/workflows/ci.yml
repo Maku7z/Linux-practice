@@ -32,6 +32,11 @@ jobs:
 
       - name: luau-lsp analyze
         run: |
+          # luau-lsp exits with "no files provided" when src has no Luau files (Phase 0).
+          if ! find src -name '*.luau' -o -name '*.lua' | grep -q .; then
+            echo "No Luau files yet."
+            exit 0
+          fi
           # [VERIFY] definitions file path in the luau-lsp repo for the pinned version.
           curl -fsSL -o globalTypes.d.luau \
             https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau
