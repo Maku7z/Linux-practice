@@ -1,12 +1,12 @@
 # Toolchain pinned by SHADEWARD 4.0 TDD section 8.
-# [VERIFY] rojo 7.7.1 and luau-lsp 1.70.1 are the TDD's pins; public releases confirmed so far
-# are rojo 7.7.0 and luau-lsp 1.70.0. If `rokit install` fails, drop to those versions.
+# TDD pins rojo 7.7.1 and luau-lsp 1.70.1, which have no public releases yet;
+# CI uses the latest public releases (rojo 7.7.0, luau-lsp 1.70.0). pesde 0.7.4 has no release; 0.7.3 is latest.
 # [VERIFY] stylua / selene / lune / pesde versions are not pinned by the TDD; check latest before first install.
 
 [tools]
-rojo = "rojo-rbx/rojo@7.7.1"
-luau-lsp = "JohnnyMorganz/luau-lsp@1.70.1"
+rojo = "rojo-rbx/rojo@7.7.0"
+luau-lsp = "JohnnyMorganz/luau-lsp@1.70.0"
 stylua = "JohnnyMorganz/StyLua@2.1.0"
 selene = "Kampfkarren/selene@0.29.0"
 lune = "lune-org/lune@0.10.1"
-pesde = "pesde-pkg/pesde@0.7.4"
+pesde = "pesde-pkg/pesde@0.7.3"
